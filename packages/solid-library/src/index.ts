@@ -18,5 +18,11 @@ export { default as RtkStage } from './components/rtk-stage';
 export type { RtkStageProps } from './components/rtk-stage';
 export { default as RtkParticipantSetup } from './components/rtk-participant-setup';
 export type { RtkParticipantSetupProps } from './components/rtk-participant-setup';
+export { default as RtkGrid } from './components/rtk-grid';
+export type { RtkGridProps } from './components/rtk-grid';
 
 export type { MeetingLike } from './types/rtk';
+export type { PeerLike } from './types/rtk';
+export type { ParticipantsLike } from './types/rtk';
+export type { ParticipantCollectionLike } from './types/rtk';
+export type { SelfLike } from './types/rtk';

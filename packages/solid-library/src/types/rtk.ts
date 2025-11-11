@@ -1,34 +1,42 @@
-import type { RTKSelf } from '@cloudflare/realtimekit';
+export interface PeerLike {
+  id?: string;
+  name?: string;
+  videoEnabled?: boolean;
+  audioEnabled?: boolean;
+  screenShareEnabled?: boolean;
+  registerVideoElement?: (el: HTMLVideoElement) => void;
+  registerAudioElement?: (el: HTMLAudioElement) => void;
+  addListener?: (event: string, callback: (...args: any[]) => void) => void;
+  removeListener?: (event: string, callback: (...args: any[]) => void) => void;
+}
+
+export interface ParticipantCollectionLike {
+  toArray?: () => PeerLike[];
+  addListener?: (event: string, callback: (...args: any[]) => void) => void;
+  removeListener?: (event: string, callback: (...args: any[]) => void) => void;
+}
+
+export interface ParticipantsLike {
+  active?: ParticipantCollectionLike;
+  pinned?: ParticipantCollectionLike;
+  joined?: ParticipantCollectionLike;
+  addListener?: (event: string, callback: (...args: any[]) => void) => void;
+  removeListener?: (event: string, callback: (...args: any[]) => void) => void;
+}
+
+export interface SelfLike extends PeerLike {
+  roomState?: string;
+  isPinned?: boolean;
+  permissions?: Record<string, any>;
+}
 
 export interface MeetingLike {
-  self: RTKSelf;
-  leaveRoom?: () => void;
-
+  self?: SelfLike;
+  participants?: ParticipantsLike;
   stage?: {
     status?: string;
-    addListener?: (event: string, handler: (...args: any[]) => void) => void;
-    removeListener?: (event: string, handler: (...args: any[]) => void) => void;
+    addListener?: (event: string, callback: (...args: any[]) => void) => void;
+    removeListener?: (event: string, callback: (...args: any[]) => void) => void;
   };
-
-  connectedMeetings?: {
-    supportsConnectedMeetings?: boolean;
-    isActive?: boolean;
-    parentMeeting?: { id: string };
-    meetings?: { id: string }[];
-    moveParticipants?: (
-      fromMeetingId: string,
-      toMeetingId: string,
-      participantIds: string[]
-    ) => void;
-  };
-
-  participants?: {
-    kickAll?: () => void;
-  };
-
-  meta?: {
-    meetingId?: string;
-    viewType?: string;
-    [key: string]: any;
-  };
+  leave?: () => void;
 }
