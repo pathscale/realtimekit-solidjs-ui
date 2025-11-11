@@ -1,23 +1,40 @@
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, splitProps } from 'solid-js';
 import { Modal, Button, Flex, Loading } from '@pathscale/ui';
+import RtkParticipantSetup from '../rtk-participant-setup';
+import type { RTKSelf } from '@cloudflare/realtimekit';
 
 export interface RtkJoinStageProps {
   open: boolean;
+  participant?: RTKSelf;
   onJoin: () => Promise<void> | void;
   onCancel: () => void;
   title?: string;
   description?: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  size?: 'sm' | 'md' | 'lg';
+  class?: string;
 }
 
-export default function RtkJoinStage(props: RtkJoinStageProps) {
+export default function RtkJoinStage(allProps: RtkJoinStageProps) {
+  const [props] = splitProps(allProps, [
+    'open',
+    'participant',
+    'onJoin',
+    'onCancel',
+    'title',
+    'description',
+    'confirmLabel',
+    'cancelLabel',
+    'size',
+    'class',
+  ]);
+
   const [isLoading, setIsLoading] = createSignal(false);
 
   const handleJoin = async () => {
     if (isLoading()) return;
     setIsLoading(true);
-
     try {
       await props.onJoin?.();
     } finally {
@@ -26,16 +43,31 @@ export default function RtkJoinStage(props: RtkJoinStageProps) {
   };
 
   return (
-    <Modal open={props.open} onClose={props.onCancel} backdrop size="md">
+    <Modal
+      open={props.open}
+      onClose={props.onCancel}
+      backdrop
+      size={props.size ?? 'md'}
+      class={props.class}
+    >
       <Modal.Header>
         <h3 class="text-lg font-semibold">{props.title ?? 'Join Stage'}</h3>
       </Modal.Header>
 
-      <Modal.Body>
+      <Modal.Body class="space-y-4">
         <p class="text-base-content">
           {props.description ??
             `You're about to join the stage. Your microphone and camera may become visible to others.`}
         </p>
+
+        <Show when={props.participant}>
+          <RtkParticipantSetup
+            participant={props.participant!}
+            isPreview
+            class="h-48 w-full"
+            nameTagPosition="bottom-left"
+          />
+        </Show>
       </Modal.Body>
 
       <Modal.Actions class="justify-end">
