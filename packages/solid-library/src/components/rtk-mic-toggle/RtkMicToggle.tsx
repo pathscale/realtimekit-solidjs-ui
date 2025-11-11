@@ -112,8 +112,8 @@ export default function RtkMicToggle(props: RtkMicToggleProps) {
   });
 
   createEffect(() => {
-    console.log('Mic enabled:', props.meeting?.self?.audioEnabled);
-    console.log('Cam enabled:', props.meeting?.self?.videoEnabled);
+    console.log('Audio enabled state:', audioEnabled());
+    console.log('Meeting.self.audioEnabled:', props.meeting?.self?.audioEnabled);
   });
 
   return (
