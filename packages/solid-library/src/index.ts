@@ -16,3 +16,7 @@ export { default as RtkMeeting } from './components/rtk-meeting';
 export type { RtkMeetingProps, MeetingMode, MeetingState } from './components/rtk-meeting';
 export { default as RtkStage } from './components/rtk-stage';
 export type { RtkStageProps } from './components/rtk-stage';
+export { default as RtkParticipantSetup } from './components/rtk-participant-setup';
+export type { RtkParticipantSetupProps } from './components/rtk-participant-setup';
+
+export type { MeetingLike } from './types/rtk';
