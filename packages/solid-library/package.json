@@ -1,6 +1,6 @@
 {
   "name": "@pathscale/realtimekit-solid-ui",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "description": "SolidJS implementation of Cloudflare RealtimeKit UI built with @pathscale/ui components",
   "type": "module",
