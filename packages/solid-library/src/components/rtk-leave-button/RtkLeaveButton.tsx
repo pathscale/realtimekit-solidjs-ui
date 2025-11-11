@@ -12,13 +12,18 @@ export interface RtkLeaveButtonProps {
 }
 
 export default function RtkLeaveButton(props: RtkLeaveButtonProps) {
-  const { size = 'md', variant = 'filled', label = 'Leave', icon, onLeave, onStateUpdate } = props;
+  const { size = 'md', variant = 'filled', label = 'Leave', icon, onLeave } = props;
 
-  const handleClick = () => {
-    onStateUpdate?.({ activeLeaveConfirmation: true });
-
-    toastStore.showWarning('Leaving the meeting...');
-    onLeave?.();
+  const handleClick = async () => {
+    try {
+      await props.onLeave?.();
+      props.onLeave
+        ? toastStore.showInfo('Leaving meeting...')
+        : toastStore.showWarning('No onLeave handler provided');
+    } catch (err) {
+      console.error(err);
+      toastStore.showError('Failed to leave meeting');
+    }
   };
 
   return (

@@ -89,6 +89,33 @@ export default function RtkMicToggle(props: RtkMicToggleProps) {
   const isHidden = () =>
     !canProduceAudio() || ['OFF_STAGE', 'REQUESTED_TO_JOIN_STAGE'].includes(stageStatus());
 
+  const [volumeLevel, setVolumeLevel] = createSignal(0);
+
+  createEffect(() => {
+    const m = props.meeting;
+    const audioTrack = m?.self?.audioTrack;
+    if (!audioTrack) return;
+
+    const ctx = new AudioContext();
+    const src = ctx.createMediaStreamSource(new MediaStream([audioTrack]));
+    const analyser = ctx.createAnalyser();
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    src.connect(analyser);
+
+    const loop = () => {
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      setVolumeLevel(avg / 255);
+      requestAnimationFrame(loop);
+    };
+    loop();
+  });
+
+  createEffect(() => {
+    console.log('Mic enabled:', props.meeting?.self?.audioEnabled);
+    console.log('Cam enabled:', props.meeting?.self?.videoEnabled);
+  });
+
   return (
     <Show when={!isHidden()}>
       <Tooltip message={tooltipLabel()} position="top">
@@ -105,6 +132,12 @@ export default function RtkMicToggle(props: RtkMicToggleProps) {
           {label()}
         </Button>
       </Tooltip>
+      <div class="bg-base-200 mt-1 h-1 overflow-hidden rounded-full">
+        <div
+          class="bg-success h-full transition-all"
+          style={{ width: `${volumeLevel() * 100}%` }}
+        />
+      </div>
     </Show>
   );
 }
