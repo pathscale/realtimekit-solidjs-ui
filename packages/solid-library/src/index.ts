@@ -22,6 +22,9 @@ export { default as RtkGrid } from './components/rtk-grid';
 export type { RtkGridProps } from './components/rtk-grid';
 export { default as RtkParticipantsAudio } from './components/rtk-participants-audio/RtkParticipantsAudio';
 export type { RtkParticipantsAudioProps } from './components/rtk-participants-audio/RtkParticipantsAudio';
+export { default as RtkUiProvider } from './components/rtk-ui-provider/RtkUiProvider';
+export { useRtkUi } from './components/rtk-ui-provider/RtkUiProvider';
+export type { RtkUiProviderProps } from './components/rtk-ui-provider/RtkUiProvider';
 
 export type { MeetingLike } from './types/rtk';
 export type { PeerLike } from './types/rtk';
