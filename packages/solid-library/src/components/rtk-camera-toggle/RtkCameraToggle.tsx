@@ -1,14 +1,11 @@
-import { createSignal, createEffect, onCleanup, Show, type JSX } from 'solid-js';
-import { Button, Tooltip, toastStore } from '@pathscale/ui';
-import type { ComponentSize, ComponentVariant } from '@pathscale/ui/dist/components/types';
+import { createSignal, createEffect, onCleanup, Show } from 'solid-js';
+import RtkControlbarButton from '../rtk-controlbar-button/RtkControlbarButton';
 import type { MeetingLike } from '~/types/rtk';
 
 export interface RtkCameraToggleProps {
   meeting?: MeetingLike;
-  size?: ComponentSize;
-  variant?: ComponentVariant;
-  videoOnIcon?: JSX.Element;
-  videoOffIcon?: JSX.Element;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'button' | 'horizontal';
   t?: (key: string) => string;
   onStateUpdate?: (state: any) => void;
 }
@@ -16,7 +13,7 @@ export interface RtkCameraToggleProps {
 export default function RtkCameraToggle(props: RtkCameraToggleProps) {
   const [videoEnabled, setVideoEnabled] = createSignal(false);
   const [canProduceVideo, setCanProduceVideo] = createSignal(false);
-  const [stageStatus, setStageStatus] = createSignal<string>('OFF_STAGE');
+  const [stageStatus, setStageStatus] = createSignal('OFF_STAGE');
   const [videoPermission, setVideoPermission] = createSignal('NOT_REQUESTED');
 
   const t = props.t ?? ((key: string) => key);
@@ -30,32 +27,30 @@ export default function RtkCameraToggle(props: RtkCameraToggleProps) {
 
     setVideoEnabled(self.videoEnabled ?? false);
     setCanProduceVideo(self.permissions?.canProduceVideo === 'ALLOWED');
+    setVideoPermission(self.permissions?.video ?? 'NOT_REQUESTED');
     setStageStatus(stage?.status ?? 'OFF_STAGE');
-    setVideoPermission(self.mediaPermissions?.video ?? 'NOT_REQUESTED');
 
     const onVideoUpdate = ({ videoEnabled }: any) => setVideoEnabled(videoEnabled);
-    const onStageStatusUpdate = () => setStageStatus(stage?.status ?? 'OFF_STAGE');
     const onPermissionUpdate = ({ kind, message }: any) =>
       kind === 'video' && setVideoPermission(message);
+    const onStageStatusUpdate = () => setStageStatus(stage?.status ?? 'OFF_STAGE');
     const onPermissionsUpdate = () =>
       setCanProduceVideo(self.permissions?.canProduceVideo === 'ALLOWED');
 
     self.addListener?.('videoUpdate', onVideoUpdate);
-    stage?.addListener?.('stageStatusUpdate', onStageStatusUpdate);
     self.addListener?.('mediaPermissionUpdate', onPermissionUpdate);
-    self.permissions?.addListener?.('permissionsUpdate', onPermissionsUpdate);
+    self.addListener?.('permissionsUpdate', onPermissionsUpdate);
+    stage?.addListener?.('stageStatusUpdate', onStageStatusUpdate);
 
     onCleanup(() => {
       self.removeListener?.('videoUpdate', onVideoUpdate);
-      stage?.removeListener?.('stageStatusUpdate', onStageStatusUpdate);
       self.removeListener?.('mediaPermissionUpdate', onPermissionUpdate);
-      self.permissions?.removeListener?.('permissionsUpdate', onPermissionsUpdate);
+      self.removeListener?.('permissionsUpdate', onPermissionsUpdate);
+      stage?.removeListener?.('stageStatusUpdate', onStageStatusUpdate);
     });
   });
 
   const hasPermissionError = () => ['DENIED', 'SYSTEM_DENIED'].includes(videoPermission());
-
-  const couldNotStart = () => videoPermission() === 'COULD_NOT_START';
 
   const toggleCamera = () => {
     const m = props.meeting;
@@ -65,29 +60,15 @@ export default function RtkCameraToggle(props: RtkCameraToggleProps) {
       props.onStateUpdate?.({
         activePermissionsMessage: { enabled: true, kind: 'video' },
       });
-      toastStore.showError('Camera permission denied.');
       return;
     }
 
     const self = m.self;
-    if (self.videoEnabled) {
-      self.disableVideo();
-      toastStore.showInfo('Camera turned off.');
-    } else {
-      self.enableVideo();
-      toastStore.showSuccess('Camera turned on.');
-    }
+    if (self?.videoEnabled) self?.disableVideo?.();
+    else self?.enableVideo?.();
   };
 
-  const tooltipLabel = () => {
-    if (couldNotStart()) return t('perm_could_not_start.video');
-    if (videoPermission() === 'SYSTEM_DENIED') return t('perm_sys_denied.video');
-    if (videoPermission() === 'DENIED') return t('perm_denied.video');
-    return videoEnabled() ? t('disable_video') : t('enable_video');
-  };
-
-  const buttonLabel = () =>
-    videoEnabled() && !hasPermissionError() ? t('video_on') : t('video_off');
+  const label = () => (videoEnabled() && !hasPermissionError() ? t('video_on') : t('video_off'));
 
   const hidden =
     !canProduceVideo() ||
@@ -96,19 +77,14 @@ export default function RtkCameraToggle(props: RtkCameraToggleProps) {
 
   return (
     <Show when={!hidden}>
-      <Tooltip message={tooltipLabel()} position="top">
-        <Button
-          size={props.size ?? 'md'}
-          variant={props.variant ?? 'filled'}
-          color={hasPermissionError() ? 'error' : 'primary'}
-          active={videoEnabled()}
-          disabled={hasPermissionError()}
-          onClick={toggleCamera}
-          startIcon={videoEnabled() ? props.videoOnIcon : props.videoOffIcon}
-        >
-          {buttonLabel()}
-        </Button>
-      </Tooltip>
+      <RtkControlbarButton
+        size={props.size}
+        label={label()}
+        variant={props.variant}
+        class={hasPermissionError() ? 'red-icon' : ''}
+        showWarning={hasPermissionError()}
+        onClick={toggleCamera}
+      />
     </Show>
   );
 }

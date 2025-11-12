@@ -1,4 +1,4 @@
-import { createSignal, createEffect, onCleanup, Show } from 'solid-js';
+import { createSignal, createEffect, onCleanup, Show, onMount } from 'solid-js';
 import { Modal, Button } from '@pathscale/ui';
 import type { MeetingLike } from '~/types/rtk';
 
@@ -8,50 +8,41 @@ export interface RtkLeaveMeetingProps {
   onClose: () => void;
   onLeave?: () => void;
   onEndAll?: () => void;
-  canEndMeeting?: boolean;
-  canJoinMainRoom?: boolean;
   onJoinMainRoom?: () => void;
-  title?: string;
-  message?: string;
+  t?: (key: string) => string;
 }
 
 export default function RtkLeaveMeeting(props: RtkLeaveMeetingProps) {
   const [canEndMeeting, setCanEndMeeting] = createSignal(false);
   const [canJoinMainRoom, setCanJoinMainRoom] = createSignal(false);
 
+  const t = props.t ?? ((key: string) => key);
+
   createEffect(() => {
     const meeting = props.meeting;
-    if (!meeting || !meeting.self) return;
+    if (!meeting?.self) return;
 
     const updatePermissions = () => {
-      const perms = meeting.self.permissions;
+      const perms = meeting.self?.permissions;
       setCanEndMeeting(!!perms?.kickParticipant);
       setCanJoinMainRoom(!!perms?.connectedMeetings?.canSwitchToParentMeeting);
     };
 
     updatePermissions();
-
-    meeting.self.permissions.addListener('permissionsUpdate', updatePermissions);
-
-    onCleanup(() => {
-      meeting.self.permissions.removeListener('permissionsUpdate', updatePermissions);
-    });
+    meeting.self?.addListener?.('permissionsUpdate', updatePermissions);
+    onCleanup(() => meeting.self?.removeListener?.('permissionsUpdate', updatePermissions));
   });
 
-  const {
-    open,
-    onClose,
-    onLeave,
-    onEndAll,
-    onJoinMainRoom,
-    title = 'Leave Meeting',
-    message = 'Are you sure you want to leave this meeting?',
-  } = props;
+  onMount(() => {
+    const handleKey = (e: KeyboardEvent) => e.key === 'Escape' && props.onClose?.();
+    document.addEventListener('keydown', handleKey);
+    onCleanup(() => document.removeEventListener('keydown', handleKey));
+  });
 
   return (
     <Modal
-      open={open}
-      onClose={onClose}
+      open={props.open}
+      onClose={props.onClose}
       backdrop
       closeOnEsc
       closeOnOutsideClick
@@ -60,36 +51,36 @@ export default function RtkLeaveMeeting(props: RtkLeaveMeetingProps) {
       responsive
     >
       <Modal.Header>
-        <h2 class="text-base-content text-lg font-semibold">{title}</h2>
+        <h2 class="text-lg font-semibold">{t('leave')}</h2>
       </Modal.Header>
 
       <Modal.Body class="text-base-content space-y-3">
-        <p class="opacity-80">{message}</p>
+        <p class="opacity-80">{t('leave_confirmation')}</p>
       </Modal.Body>
 
       <Modal.Actions class="mt-4 flex flex-wrap justify-end gap-2">
-        <Button variant="outline" color="neutral" onClick={onClose} class="">
-          Cancel
+        <Button variant="outline" color="neutral" onClick={props.onClose}>
+          {t('cancel')}
         </Button>
 
         <Show when={canJoinMainRoom()}>
           <Button
             variant="soft"
             color="primary"
-            onClick={onJoinMainRoom}
+            onClick={props.onJoinMainRoom}
             class="bg-base-200 hover:bg-base-100"
           >
-            Return to Main Room
+            {t('breakout_rooms.leave_confirmation.main_room_btn')}
           </Button>
         </Show>
 
-        <Button variant="filled" color="error" onClick={onLeave}>
-          Leave
+        <Button variant="filled" color="error" onClick={props.onLeave}>
+          {t('leave')}
         </Button>
 
         <Show when={canEndMeeting()}>
-          <Button variant="filled" color="error" onClick={onEndAll} class=" opacity-90">
-            End for All
+          <Button variant="filled" color="error" onClick={props.onEndAll} class="opacity-90">
+            {t('end.all')}
           </Button>
         </Show>
       </Modal.Actions>

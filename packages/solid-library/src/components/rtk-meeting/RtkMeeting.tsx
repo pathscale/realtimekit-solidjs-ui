@@ -78,9 +78,6 @@ export default function RtkMeeting(props: RtkMeetingProps) {
           open={showLeaveModal()}
           onClose={handleCancelLeave}
           onLeave={handleConfirmLeave}
-          canEndMeeting={true}
-          title="Leave Meeting"
-          message="Are you sure you want to leave this meeting?"
         />
       </Show>
 
